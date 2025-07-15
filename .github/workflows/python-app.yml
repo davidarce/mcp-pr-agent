@@ -1,0 +1,32 @@
+name: Python UV Build and Test
+
+on:
+  push:
+    branches: [ main ]  # Se activa en pushes a 'main' (ajusta si usas 'master')
+  pull_request:
+    branches: [ main ]  # También en pull requests a 'main'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest  # Usa Ubuntu para el runner (compatible con uv)
+
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v4  # Clona el repositorio[1]
+
+    - name: Instalar uv con caching
+      uses: astral-sh/setup-uv@v6  # Acción oficial para instalar uv y habilitar cache[1][2][3]
+      with:
+        version: "latest"  # Usa la versión más reciente; puedes pinear una específica como "0.7.21"[1][2]
+        enable-cache: true  # Habilita caching para dependencias y mejorar tiempos[1][2][4]
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5  # Configura Python basado en tu proyecto[1][2]
+      with:
+        python-version-file: "pyproject.toml"  # Usa la versión de Python de pyproject.toml (o ajusta a .python-version)[1]
+
+    - name: Sincronizar dependencias
+      run: uv sync --locked --all-extras --dev  # Instala dependencias con uv (asumiendo pyproject.toml)[1][2][4]
+
+    - name: Ejecutar tests
+      run: uv run pytest  # Ejecuta tests con pytest en el entorno de uv[1][2][4]
