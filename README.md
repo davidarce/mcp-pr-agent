@@ -1,6 +1,6 @@
 # MCP PR Agent
 
-A comprehensive Model Context Protocol (MCP) server that helps developers create better pull requests by analyzing git repository changes, managing PR templates, and providing intelligent template suggestions.
+A comprehensive Model Context Protocol (MCP) server that helps developers create better pull requests by analyzing git repository changes, managing PR templates, providing intelligent template suggestions, and monitoring GitHub Actions workflows.
 
 ## Features
 
@@ -21,6 +21,12 @@ A comprehensive Model Context Protocol (MCP) server that helps developers create
 - **Context Awareness**: Considers file types, change patterns, and keywords
 - **Flexible Matching**: Supports multiple aliases for change types
 
+### 🚀 GitHub Actions Integration
+- **Webhook Server**: Receives and stores GitHub Actions events
+- **Workflow Monitoring**: Tracks workflow status and results
+- **CI/CD Analysis**: Provides insights into deployment and test results
+- **Event History**: Maintains history of GitHub Actions events
+
 ## Installation
 
 ### Prerequisites
@@ -28,6 +34,7 @@ A comprehensive Model Context Protocol (MCP) server that helps developers create
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
 - Git repository
 - MCP-compatible client (like Claude Code)
+- (Optional) GitHub repository for Actions integration
 
 ### Setup
 1. Clone the repository:
@@ -41,10 +48,16 @@ A comprehensive Model Context Protocol (MCP) server that helps developers create
    uv sync
    ```
 
-3. Run the server:
+3. Run the MCP server:
    ```bash
    uv run server.py
    ```
+
+4. (Optional) Run the GitHub webhook server for GitHub Actions integration:
+   ```bash
+   uv run webhook_server.py
+   ```
+   The webhook server runs on port 8000 by default and receives GitHub Actions events.
 
 ## MCP Tools
 
@@ -121,6 +134,32 @@ Analyzes change descriptions and suggests the most appropriate PR template.
 - **Performance/Optimization**: Maps to performance.md template
 - **Security**: Maps to security.md template
 
+### 4. `get_recent_actions_events`
+Retrieves recent GitHub Actions events received via webhook.
+
+**Parameters:**
+- `limit` (int, optional): Maximum number of events to return (default: 10)
+
+**Returns:** JSON array of GitHub Actions events with:
+- Event type and timestamp
+- Workflow run information
+- Repository details
+- Action outcomes
+
+### 5. `get_workflow_status`
+Gets the current status of GitHub Actions workflows.
+
+**Parameters:**
+- `workflow_name` (str, optional): Specific workflow name to filter by
+
+**Returns:** JSON array of workflow status objects containing:
+- `name`: Workflow name
+- `status`: Current status (queued, in_progress, completed)
+- `conclusion`: Final result (success, failure, cancelled, etc.)
+- `run_number`: Workflow run number
+- `updated_at`: Last update timestamp
+- `html_url`: Link to workflow run
+
 ## Template Structure
 
 Each template follows a consistent structure:
@@ -174,11 +213,60 @@ suggestion = mcp.call_tool("suggest_template", {
 2. **Get Suggestions**: Use `suggest_template` to get appropriate template recommendations
 3. **Create PR**: Use the suggested template content to create a comprehensive PR description
 
+## GitHub Actions Integration
+
+### Webhook Setup
+To enable GitHub Actions monitoring, you need to set up a webhook in your GitHub repository:
+
+1. **Start the webhook server**:
+   ```bash
+   uv run webhook_server.py
+   ```
+
+2. **Configure GitHub webhook**:
+   - Go to your repository Settings → Webhooks
+   - Add webhook with URL: `http://your-server:8000/webhook`
+   - Select "Workflow runs" events
+   - Set content type to "application/json"
+
+3. **Access GitHub Actions data**:
+   ```python
+   # Get recent events
+   events = mcp.call_tool("get_recent_actions_events", {"limit": 5})
+   
+   # Check workflow status
+   status = mcp.call_tool("get_workflow_status", {"workflow_name": "CI"})
+   ```
+
+### MCP Prompts
+The server includes several pre-built prompts for GitHub Actions analysis:
+
+- `analyze_ci_results`: Comprehensive CI/CD results analysis
+- `create_deployment_summary`: Generate deployment status summaries
+- `generate_pr_status_report`: Complete PR status including CI/CD
+- `troubleshoot_workflow_failure`: Help debug failing workflows
+
 ## Configuration
 
 ### Environment Variables
 - `MCP_PR_AGENT_TEMPLATES_DIR`: Custom templates directory path
 - `MCP_PR_AGENT_DEFAULT_BRANCH`: Default base branch (default: "main")
+- `WEBHOOK_PORT`: Port for webhook server (default: 8000)
+
+### MCP Configuration (.mcp.json)
+The project includes a `.mcp.json` configuration file for easy MCP client setup:
+
+```json
+{
+  "mcpServers": {
+    "pr-agent-actions": {
+      "command": "uv",
+      "args": ["run", "server.py"],
+      "cwd": "/Users/David/Dev/mcp/mcp-pr-agent"
+    }
+  }
+}
+```
 
 ### Claude Code Integration
 Add this MCP server to Claude Code using the following command:
