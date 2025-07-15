@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "pr-agent-actions": {
+      "command": "uv",
+      "args": ["run", "server.py"],
+      "cwd": "/Users/David/Dev/mcp/mcp-pr-agent"
+    }
+  }
+}
