@@ -103,7 +103,7 @@ async def analyze_file_changes(
                 "error": str(e)
             }
 
-        # Get list of changed files
+        # Get a list of changed files
         files_result = subprocess.run(
             ["git", "diff", "--name-status", f"{base_branch}...HEAD"],
             capture_output=True,
